@@ -13,8 +13,8 @@ urls = secret_client.get_urls(model=models[0])
 
 # Create the AI client with specific parameters
 secret_ai_llm = ChatSecret(
-    base_url=urls[1],  # Choose a specific URL
-    model=models[1],    # Your selected model
+    base_url=urls[0],  # Choose a specific URL
+    model=models[0],    # Your selected model
     temperature=1.0
 )
 
@@ -27,5 +27,5 @@ messages = [
 # Invoke the LLM (with streaming disabled)
 response = secret_ai_llm.invoke(messages, stream=False)
 print(response.content)
-print(urls[1])
-print(models[1])
+print(urls)
+print(models)
