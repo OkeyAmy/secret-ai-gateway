@@ -40,7 +40,6 @@ def create_app():
     )
 
     # Simplified root endpoint with HEAD support
-    @app.get("/", status_code=200)
     @app.head("/", status_code=200)
     async def root():
         return {"message": "Secret Network AI API is running", "status": "healthy"}
