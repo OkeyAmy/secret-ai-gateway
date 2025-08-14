@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, Query
 from app.config import settings
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
-from app.models import AvailableModels
+from app.models import AvailableModels, PromptTargets
 
 router = APIRouter()
 # System prompt for prompt improvement
@@ -78,62 +78,54 @@ class PromptRequest(BaseModel):
     prompt: str
     target: Optional[str] = "text"  # "text" or "image"
 
+
+def _improve(prompt: str, target: str) -> str:
+    from app.main import get_gemini_client
+    gemini_client = get_gemini_client()
+
+    target = (target or "text").strip().lower()
+    if target not in ("text", "image"):
+        target = "text"
+
+    target_section = (
+        "Target: IMAGE prompt. Optimize for image models (describe visuals, concrete nouns/adjectives, include style, lighting, camera, aspect ratio; avoid ambiguous abstractions).\n"
+        if target == "image"
+        else "Target: TEXT prompt. Optimize for clarity, structure, and implementable instructions.\n"
+    )
+
+    improvement_prompt = f"""{target_section}
+Improve the following prompt according to the instructions.
+
+USER PROMPT:
+{prompt}
+
+Return ONLY the improved prompt, nothing else.
+"""
+
+    contents = f"{PROMPT_IMPROVER_SYSTEM_PROMPT['content']}\n\nUser: {improvement_prompt}"
+    response = gemini_client.models.generate_content(
+        model="models/gemini-2.5-flash",
+        contents=contents
+    )
+    return getattr(response, 'text', str(response))
+
+@router.get("/improve-prompt", tags=["Prompt Improvement"])
+async def improve_prompt_get(
+    prompt: str = Query(..., description="The prompt text to improve"),
+    target: PromptTargets = Query(PromptTargets.TEXT, description="Optional: tailor improvement for text or image prompts")
+) -> dict:
+    try:
+        content = _improve(prompt=prompt, target=target.value)
+        return {"response": content}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error improving prompt: {str(e)}")
+
 @router.post("/improve-prompt", tags=["Prompt Improvement"])
 async def improve_prompt(
     request: PromptRequest
 ) -> dict:
     try:
-        from app.main import get_gemini_client  # Use shared client
-        gemini_client = get_gemini_client()
-
-        target = (request.target or "text").strip().lower()
-        if target not in ("text", "image"):
-            target = "text"
-
-        target_section = (
-            "Target: IMAGE prompt. Optimize for image models (describe visuals, concrete nouns/adjectives, include style, lighting, camera, aspect ratio; avoid ambiguous abstractions).\n"
-            if target == "image"
-            else "Target: TEXT prompt. Optimize for clarity, structure, and implementable instructions.\n"
-        )
-
-        improvement_prompt = f"""{target_section}
-Improve the following prompt according to the instructions.
-
-USER PROMPT:
-{request.prompt}
-
-Return ONLY the improved prompt, nothing else.
-"""
-        
-        messages = [
-            PROMPT_IMPROVER_SYSTEM_PROMPT,
-            {"role": "user", "content": improvement_prompt}
-        ]
-
-        contents = f"{PROMPT_IMPROVER_SYSTEM_PROMPT['content']}\n\nUser: {improvement_prompt}"
-        response = gemini_client.models.generate_content(
-            model="models/gemini-2.5-flash",
-            contents=contents
-        )
-        content = getattr(response, 'text', str(response))
-        
-        if "<think>" in content and "</think>" in content:
-            try:
-                think_start = content.find("<think>") + len("<think>")
-                think_end = content.find("</think>")
-                think_output = content[think_start:think_end].strip()
-                actual_response = content[content.find("</think>") + len("</think>"):].strip()
-                return {
-                    "Think Process": think_output,
-                    "Response": actual_response
-                }
-            except Exception:
-                return {"response": content}
-        else:
-            return {"response": content}
-
+        content = _improve(prompt=request.prompt, target=request.target or "text")
+        return {"response": content}
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error improving prompt: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error improving prompt: {str(e)}")

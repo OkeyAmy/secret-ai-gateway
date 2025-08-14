@@ -33,6 +33,23 @@ curl -s "https://secret-ai-gateway.onrender.com/api/chat?prompt=Hello%20Gemini&m
   - `{ "response": "Hello!" }`
   - `{ "Think Process": "...", "Response": "..." }`
 
+## Improve Prompt
+- GET `/api/improve-prompt`
+- Query params:
+  - `prompt` (string, required): prompt to improve
+  - `target` (enum, optional): `text` (default) or `image`
+- Example (text target):
+```bash
+curl -s "https://secret-ai-gateway.onrender.com/api/improve-prompt?prompt=Write%20a%20project%20plan&target=text"
+```
+- Example (image target):
+```bash
+curl -s "https://secret-ai-gateway.onrender.com/api/improve-prompt?prompt=A%20futuristic%20cityscape&target=image"
+```
+- Response: `{ "response": "<improved prompt>" }`
+- POST `/api/improve-prompt` (Backwards compatible)
+  - Body: `{ "prompt": "...", "target": "text|image" }`
+
 ## Generate Text (Deprecated)
 - DEPRECATED: Use `GET /api/chat` instead for text generation.
 - POST `/api/generate/text`

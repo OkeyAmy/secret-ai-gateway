@@ -11,6 +11,10 @@ class ImageModels(str, Enum):
     GEMINI_20_FLASH_EXP_IMAGE_GENERATION = "gemini-2.0-flash-exp-image-generation"
     GEMINI_20_FLASH_PREVIEW_IMAGE_GENERATION = "gemini-2.0-flash-preview-image-generation"
 
+class PromptTargets(str, Enum):
+    TEXT = "text"
+    IMAGE = "image"
+
 class GenerateRequest(BaseModel):
     prompt: str  
     image: Optional[str] = None  
