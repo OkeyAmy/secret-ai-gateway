@@ -1,47 +1,90 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
+from google.genai import types
+import base64
+import mimetypes
 
 router = APIRouter()
 
+ALLOWED_IMAGE_MODELS = {
+    "models/gemini-2.0-flash-exp-image-generation",
+    "models/gemini-2.0-flash-preview-image-generation",
+}
+
 class ImageGenerateRequest(BaseModel):
     prompt: str
-    model: Optional[str] = "models/imagen-4.0-generate-preview-06-06"
+    model: Optional[str] = "models/gemini-2.0-flash-preview-image-generation"
+
+def _generate_image_stream(prompt: str, model: str) -> Dict[str, Any]:
+    if model not in ALLOWED_IMAGE_MODELS:
+        raise HTTPException(status_code=400, detail="Unsupported image model. Use one of: gemini-2.0-flash-exp-image-generation or gemini-2.0-flash-preview-image-generation")
+    from app.main import get_gemini_client
+    client = get_gemini_client()
+
+    contents = [
+        types.Content(
+            role="user",
+            parts=[types.Part.from_text(text=prompt)],
+        )
+    ]
+    config = types.GenerateContentConfig(
+        response_modalities=["IMAGE", "TEXT"],
+    )
+
+    first_image_b64: Optional[str] = None
+    first_image_mime: Optional[str] = None
+    first_text: Optional[str] = None
+
+    for chunk in client.models.generate_content_stream(
+        model=model,
+        contents=contents,
+        config=config,
+    ):
+        try:
+            if not chunk.candidates:
+                continue
+            content = chunk.candidates[0].content
+            if not content or not content.parts:
+                continue
+            part = content.parts[0]
+            if getattr(part, "inline_data", None) and getattr(part.inline_data, "data", None):
+                # Capture first image
+                if first_image_b64 is None:
+                    first_image_b64 = part.inline_data.data
+                    first_image_mime = getattr(part.inline_data, "mime_type", None)
+            else:
+                # Capture first text chunk
+                if first_text is None and hasattr(chunk, "text") and chunk.text:
+                    first_text = chunk.text
+        except Exception:
+            continue
+
+    if first_image_b64:
+        # Return base64 as response (chat-like response key)
+        prefix = f"data:{first_image_mime};base64," if first_image_mime else ""
+        return {"response": prefix + first_image_b64}
+    if first_text:
+        return {"response": first_text}
+    return {"response": "No image generated."}
 
 @router.post("/generate/image", tags=["Generation"])
 async def generate_image(request: ImageGenerateRequest):
     try:
-        from app.main import get_gemini_client
-        client = get_gemini_client()
+        return _generate_image_stream(prompt=request.prompt, model=request.model or "models/gemini-2.0-flash-preview-image-generation")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating image: {str(e)}")
 
-        result = client.models.generate_images(
-            model=request.model or "models/imagen-4.0-generate-preview-06-06",
-            prompt=request.prompt,
-            config=dict(
-                number_of_images=1,
-                output_mime_type="image/jpeg",
-                aspect_ratio="1:1",
-            ),
-        )
-
-        if not getattr(result, 'generated_images', None):
-            return {"response": "No images generated."}
-
-        # Return the first image info similar to chat format
-        generated_image = result.generated_images[0]
-        img = getattr(generated_image, 'image', None)
-        if not img:
-            return {"response": "No image payload returned."}
-
-        uri = getattr(img, 'uri', None)
-        if uri:
-            return {"response": uri}
-
-        data = getattr(img, 'bytes', None)
-        if data:
-            import base64
-            return {"response": base64.b64encode(data).decode('utf-8')}
-
-        return {"response": "Image generated, but no URI or data available."}
+@router.get("/generate/image", tags=["Generation"])
+async def generate_image_get(
+    prompt: str = Query(..., description="The prompt to generate an image"),
+    model: str = Query("models/gemini-2.0-flash-preview-image-generation", description="Image model to use")
+):
+    try:
+        return _generate_image_stream(prompt=prompt, model=model)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating image: {str(e)}")
