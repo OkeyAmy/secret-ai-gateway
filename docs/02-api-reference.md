@@ -4,10 +4,17 @@ Base URL: `https://secret-ai-gateway.onrender.com`
 
 ## Health
 - GET `/api/health`
-- Returns service status
+- Example:
+```bash
+curl -s "https://secret-ai-gateway.onrender.com/api/health"
+```
 
 ## Models
 - GET `/api/models`
+- Example:
+```bash
+curl -s "https://secret-ai-gateway.onrender.com/api/models"
+```
 - Returns:
   - `models`: string[] of model names
   - `model_details`: map of name -> metadata
@@ -18,6 +25,10 @@ Base URL: `https://secret-ai-gateway.onrender.com`
 - Query params:
   - `prompt` (string, required)
   - `model` (enum, optional): `gemini-2.5-flash` (default), `gemini-2.5-pro`, `gemini-2.0-flash`
+- Example:
+```bash
+curl -s "https://secret-ai-gateway.onrender.com/api/chat?prompt=Hello%20Gemini&model=gemini-2.5-flash"
+```
 - Response examples:
   - `{ "response": "Hello!" }`
   - `{ "Think Process": "...", "Response": "..." }`
@@ -27,6 +38,12 @@ Base URL: `https://secret-ai-gateway.onrender.com`
 - JSON body:
   - `prompt` (string, required)
   - `model` (string, optional; default `gemini-2.5-flash` or full `models/gemini-2.5-flash`)
+- Example:
+```bash
+curl -s -X POST "https://secret-ai-gateway.onrender.com/api/generate/text" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"Write a product tagline","model":"gemini-2.5-flash"}'
+```
 - Response:
   - `{ "response": "..." }`
 
@@ -36,10 +53,18 @@ Base URL: `https://secret-ai-gateway.onrender.com`
   - `prompt` (string, required)
   - `model` (string, optional; default `gemini-2.0-flash-preview-image-generation`)
     - allowed: `gemini-2.0-flash-exp-image-generation`, `gemini-2.0-flash-preview-image-generation`
+- Example:
+```bash
+curl -s "https://secret-ai-gateway.onrender.com/api/generate/image?prompt=A%20sunset%20over%20mountains&model=gemini-2.0-flash-preview-image-generation"
+```
 - Behavior: streams, saves first image as a server file, returns URL
 - Response:
   - `{ "response": "https://secret-ai-gateway.onrender.com/api/files/<filename>" }`
 
 ## Files
 - GET `/api/files/{filename}`
+- Example:
+```bash
+curl -sLO "https://secret-ai-gateway.onrender.com/api/files/<filename>"
+```
 - Serves generated files stored under `/tmp/ai-images`
