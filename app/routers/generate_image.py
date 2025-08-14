@@ -6,17 +6,18 @@ import base64
 import mimetypes
 import os
 import uuid
+from app.models import ImageModels
 
 router = APIRouter()
 
 ALLOWED_IMAGE_MODELS = {
-    "gemini-2.0-flash-exp-image-generation",
-    "gemini-2.0-flash-preview-image-generation",
+    ImageModels.GEMINI_20_FLASH_EXP_IMAGE_GENERATION.value,
+    ImageModels.GEMINI_20_FLASH_PREVIEW_IMAGE_GENERATION.value,
 }
 
 class ImageGenerateRequest(BaseModel):
     prompt: str
-    model: Optional[str] = "gemini-2.0-flash-preview-image-generation"
+    model: Optional[str] = ImageModels.GEMINI_20_FLASH_PREVIEW_IMAGE_GENERATION.value
 
 def _generate_image_stream_to_file(prompt: str, model_name: str) -> Dict[str, Any]:
     if model_name not in ALLOWED_IMAGE_MODELS:
@@ -86,10 +87,10 @@ def _generate_image_stream_to_file(prompt: str, model_name: str) -> Dict[str, An
 async def generate_image_get(
     request: Request,
     prompt: str = Query(..., description="The prompt to generate an image"),
-    model: str = Query("gemini-2.0-flash-preview-image-generation", description="Image model to use (dropdown of two options)")
+    model: ImageModels = Query(ImageModels.GEMINI_20_FLASH_PREVIEW_IMAGE_GENERATION, description="Image model to use")
 ):
     try:
-        result = _generate_image_stream_to_file(prompt=prompt, model_name=model)
+        result = _generate_image_stream_to_file(prompt=prompt, model_name=model.value)
         if "filename" in result:
             url = str(request.base_url) + f"api/files/{result['filename']}"
             return {"response": url}
