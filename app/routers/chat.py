@@ -40,17 +40,18 @@ Your goal is to provide the most helpful and satisfying response possible, ensur
             messages.append(("system", system_prompt))
         messages.append(("user", prompt))
         
-        # Prepare a single concatenated content for Gemini
-        contents = f"{system_prompt}\n\nUser: {prompt}"
+        # Normalize model name to full path
+        model_name = model.value
+        full_model = model_name if model_name.startswith("models/") else f"models/{model_name}"
+
         response = gemini_client.models.generate_content(
-            model="models/gemini-2.5-flash",
-            contents=contents
+            model=full_model,
+            contents=f"{system_prompt}\n\nUser: {prompt}"
         )
         content = getattr(response, 'text', str(response))
         messages.append(("assistant", content))
         chat_sessions[session_id] = messages
         
-        # Parse for think tags if present; otherwise return full response
         if "<think>" in content and "</think>" in content:
             try:
                 think_start = content.find("<think>") + len("<think>")
