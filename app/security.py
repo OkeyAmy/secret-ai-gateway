@@ -8,5 +8,5 @@ load_dotenv()
 
 # No authorization needed
 # API key is managed internally
-# Prioritize .env file API key, fallback to hardcoded key
-SECRET_AI_API_KEY = os.getenv('SECRET_AI_API_KEY', "bWFzdGVyQHNjcnRsYWJzLmNvbTpTZWNyZXROZXR3b3JrTWFzdGVyS2V5X18yMDI1")
+# Google Gemini API key (no default)
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')

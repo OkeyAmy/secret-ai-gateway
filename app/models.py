@@ -3,8 +3,7 @@ from pydantic import BaseModel
 from typing import Optional  # Add this import
 
 class AvailableModels(str, Enum):
-    DEEPSEEK = "deepseek-r1:70b"
-    LLAMA_VISION = "llama3.2-vision"
+    GEMINI_FLASH = "gemini-2.5-flash"
 
 class GenerateRequest(BaseModel):
     prompt: str  

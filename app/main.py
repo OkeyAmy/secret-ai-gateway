@@ -12,13 +12,10 @@ logger = logging.getLogger(__name__)
 # Load environment variables
 load_dotenv()
 
-# Set API key directly if not already set in environment
-if not os.getenv("SECRET_AI_API_KEY"):
-    os.environ['SECRET_AI_API_KEY'] = "bWFzdGVyQHNjcnRsYWJzLmNvbTpTZWNyZXROZXR3b3JrTWFzdGVyS2V5X18yMDI1"
+# Initialize Google Gemini client
+from google import genai
 
-# Initialize Secret client with the API key
-from secret_ai_sdk.secret import Secret
-secret_client = Secret()
+gemini_client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
 def create_app():
     # Minimal initialization to reduce startup time

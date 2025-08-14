@@ -11,9 +11,8 @@ requests
 asyncio
 request-limiter
 
-# Secret Network SDK dependencies
-secret-sdk>=1.8.1
-secret-ai-sdk
+# Google Gemini SDK dependency
+google-genai>=0.4.0
 
 # Additional dependencies for deployment
 gunicorn

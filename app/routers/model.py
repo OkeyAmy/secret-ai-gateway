@@ -6,27 +6,20 @@ router = APIRouter()
 
 @router.get("/models", tags=["Models"])
 async def get_available_models():
-    try:
-        from app.main import secret_client  # Import here to avoid circular imports
-        
-        models = secret_client.get_models()
-        model_info = {
-            "deepseek-r1:70b": {
-                "description": "Advanced language model for text generation and analysis",
-                "capabilities": ["text generation", "code generation", "analysis"],
-                "max_tokens": 8192,
-                "recommended_temperature": 0.7
-            },
-            "llama3.2-vision": {
-                "description": "Multimodal model capable of processing both text and images",
-                "capabilities": ["image analysis", "text generation", "visual reasoning"],
-                "max_tokens": 4096,
-                "recommended_temperature": 0.8
-            }
-        }
-        return {
-            "models": models,
-            "model_details": {model: model_info.get(model, {}) for model in models}
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error retrieving models: {str(e)}")
+	try:
+		models = ["gemini-2.5-flash"]
+		model_info = {
+			"gemini-2.5-flash": {
+				"description": "Google Gemini 2.5 Flash: fast, cost-efficient multimodal model",
+				"capabilities": ["text generation", "multimodal input", "function calling", "structured outputs"],
+				"max_input_tokens": 1048576,
+				"max_output_tokens": 65536,
+				"recommended_temperature": 0.7
+			}
+		}
+		return {
+			"models": models,
+			"model_details": {model: model_info.get(model, {}) for model in models}
+		}
+	except Exception as e:
+		raise HTTPException(status_code=500, detail=f"Error retrieving models: {str(e)}")

@@ -1,11 +1,9 @@
 from fastapi import APIRouter, HTTPException
 from app.config import settings
-from secret_ai_sdk.secret_ai import ChatSecret
 from datetime import datetime
 from uuid import uuid5, NAMESPACE_DNS
 from typing import Dict, List, Any
 from app.models import AvailableModels
-from app.security import SECRET_AI_API_KEY
 
 router = APIRouter()
 
@@ -14,20 +12,12 @@ chat_sessions: Dict[str, List[dict]] = {}
 @router.get("/chat", tags=['Generation'])
 async def chat_with_model(
     prompt: str,
-    model: AvailableModels = AvailableModels.DEEPSEEK
+    model: AvailableModels = AvailableModels.GEMINI_FLASH
 ):
     try:
-        from app.main import secret_client  
+        from app.main import gemini_client
         
         session_id = f"session_{uuid5(NAMESPACE_DNS, 'default_api_key')}"
-        urls = secret_client.get_urls(model=model)
-        if not urls:
-            raise HTTPException(status_code=404, detail="Model not found")
-        secret_ai_llm = ChatSecret(
-            base_url=urls[0],
-            model=model,
-            temperature=0.3
-        )
         
         system_prompt = """You are a thoughtful and helpful assistant when hlps user's whith their prompt/question. When answering user questions:
 1. Take time to think carefully about the question
@@ -46,39 +36,31 @@ Your goal is to provide the most helpful and satisfying response possible, ensur
             messages.append(("system", system_prompt))
         messages.append(("user", prompt))
         
-        response = secret_ai_llm.invoke(messages)
-        messages.append(("assistant", response.content))
+        # Prepare a single concatenated content for Gemini
+        contents = f"{system_prompt}\n\nUser: {prompt}"
+        response = gemini_client.models.generate_content(
+            model="models/gemini-2.5-flash",
+            contents=contents
+        )
+        content = getattr(response, 'text', str(response))
+        messages.append(("assistant", content))
         chat_sessions[session_id] = messages
         
-        # Handle response based on model
-        if model == AvailableModels.LLAMA_VISION:
-            return {"response": response.content}
-        else:
-            # For DeepSeek model, parse think/response tags
-            content = response.content
-            
-            # Debug the actual content received
-            print(f"Raw response content: {content}")
-            
-            if "<think>" in content and "</think>" in content:
-                try:
-                    think_start = content.find("<think>") + len("<think>")
-                    think_end = content.find("</think>")
-                    think_output = content[think_start:think_end].strip()
-                    actual_response = content[think_end + len("</think>"):].strip()
-                    
-                    # Return both parts separately
-                    return {
-                        "Think Process": think_output,
-                        "Response": actual_response
-                    }
-                except Exception as parsing_error:
-                    print(f"Error parsing think tags: {parsing_error}")
-                    # Fall back to returning the whole response
-                    return {"response": content}
-            else:
-                # No think tags found, return the whole response
+        # Parse for think tags if present; otherwise return full response
+        if "<think>" in content and "</think>" in content:
+            try:
+                think_start = content.find("<think>") + len("<think>")
+                think_end = content.find("</think>")
+                think_output = content[think_start:think_end].strip()
+                actual_response = content[think_end + len("</think>"):].strip()
+                return {
+                    "Think Process": think_output,
+                    "Response": actual_response
+                }
+            except Exception:
                 return {"response": content}
+        else:
+            return {"response": content}
 
     except Exception as e:
         raise HTTPException(

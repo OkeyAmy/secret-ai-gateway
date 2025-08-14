@@ -1,26 +1,24 @@
 from fastapi import APIRouter, HTTPException
-from secret_ai_sdk.secret import Secret
+import os
 
 router = APIRouter()
 
 @router.get("/health", tags=["System"])
 async def health_check():
-    try:
-        from app.main import secret_client 
-        
-        models = secret_client.get_models()
-        return {
-            "status": "healthy",
-            "secret_network_connection": "connected",
-            "available_models": len(models),
-            "api_version": "1.0.0"
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=503,
-            detail={
-                "status": "unhealthy",
-                "error": str(e),
-                "secret_network_connection": "disconnected"
-            }
-        )
+	try:
+		configured = bool(os.getenv("GOOGLE_API_KEY"))
+		return {
+			"status": "healthy" if configured else "degraded",
+			"gemini_api_configuration": "configured" if configured else "missing_key",
+			"available_models": 1 if configured else 0,
+			"api_version": "1.0.0"
+		}
+	except Exception as e:
+		raise HTTPException(
+			status_code=503,
+			detail={
+				"status": "unhealthy",
+				"error": str(e),
+				"gemini_api_configuration": "missing"
+			}
+		)

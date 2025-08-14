@@ -1,10 +1,8 @@
 from fastapi import APIRouter, HTTPException, Body
 from app.config import settings
-from secret_ai_sdk.secret_ai import ChatSecret
 from pydantic import BaseModel
 from typing import Dict, Any
 from app.models import AvailableModels
-from app.security import SECRET_AI_API_KEY
 
 router = APIRouter()
 # System prompt for prompt improvement
@@ -38,18 +36,8 @@ async def improve_prompt(
     prompt: str = Body(..., description="The prompt text to improve")
 ) -> dict:
     try:
-        from app.main import secret_client  # Import here to avoid circular imports
+        from app.main import gemini_client  # Use shared client
         
-        urls = secret_client.get_urls(model=AvailableModels.DEEPSEEK)
-        if not urls:
-            raise HTTPException(status_code=404, detail="Model not found")
-        secret_ai_llm = ChatSecret(
-            base_url=urls[0],
-            model=AvailableModels.DEEPSEEK,
-            temperature=0.7
-        )
-        
-        # improvement_prompt = # Construct the improvement request
         improvement_prompt = f"""You are a highly skilled prompt engineer with extensive experience in refining and optimizing prompts for clarity, effectiveness, and comprehensive coverage. Your task is to transform the following user prompt into a more detailed and actionable version while preserving its original intent.
 
 USER PROMPT:
@@ -118,14 +106,12 @@ Exclude all commentary, explanations, or formatting beyond the prompt itself.
             {"role": "user", "content": improvement_prompt}
         ]
 
-        formatted_messages = [(msg["role"], msg["content"]) for msg in messages]
-        response = secret_ai_llm.invoke(formatted_messages)
-        
-        # Parse the response
-        content = response.content
-        
-        # Debug the actual content received
-        print(f"Raw improve_prompt response content: {content}")
+        contents = f"{PROMPT_IMPROVER_SYSTEM_PROMPT['content']}\n\nUser: {improvement_prompt}"
+        response = gemini_client.models.generate_content(
+            model="models/gemini-2.5-flash",
+            contents=contents
+        )
+        content = getattr(response, 'text', str(response))
         
         if "<think>" in content and "</think>" in content:
             try:
@@ -133,18 +119,13 @@ Exclude all commentary, explanations, or formatting beyond the prompt itself.
                 think_end = content.find("</think>")
                 think_output = content[think_start:think_end].strip()
                 actual_response = content[content.find("</think>") + len("</think>"):].strip()
-                
-                # Return both parts separately
                 return {
                     "Think Process": think_output,
                     "Response": actual_response
                 }
-            except Exception as parsing_error:
-                print(f"Error parsing think tags: {parsing_error}")
-                # Fall back to returning the whole response
+            except Exception:
                 return {"response": content}
         else:
-            # No think tags found, return the whole response
             return {"response": content}
 
     except Exception as e:

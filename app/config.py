@@ -2,11 +2,11 @@ import os
 from typing import List, Union
 
 class Settings:
-    # Secure environment variables with default fallback
-    SECRET_AI_API_KEY: Union[str, None] = os.getenv("SECRET_AI_API_KEY")
+    # Google Gemini API key
+    GOOGLE_API_KEY: Union[str, None] = os.getenv("GOOGLE_API_KEY")
     
-    # Predefined API key with secure default
-    API_KEY: str = os.getenv("API_KEY", "bWFzdGVyQHNjcnRsYWJzLmNvbTpTZWNyZXROZXR3b3JrTWFzdGVyS2V5X18yMDI1")
+    # Predefined API key (unused fallback)
+    API_KEY: str = os.getenv("API_KEY", "")
     
     # CORS and Origin Configuration
     @property
@@ -31,6 +31,6 @@ class Settings:
         """
         Provide a string representation of the settings for debugging.
         """
-        return f"Settings(SECRET_AI_API_KEY={'*' * 8 if self.SECRET_AI_API_KEY else 'Not Set'})"
+        return f"Settings(GOOGLE_API_KEY={'*' * 8 if self.GOOGLE_API_KEY else 'Not Set'})"
 
 settings = Settings()
