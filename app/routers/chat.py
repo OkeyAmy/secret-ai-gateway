@@ -82,14 +82,14 @@ class ImageChatRequest(BaseModel):
     image_base64: Optional[str] = None
     image_url: Optional[str] = None
     mime_type: Optional[str] = "image/png"
-    model: Optional[str] = "models/gemini-2.5-flash"
+    model: Optional[str] = "models/imagen-3.0-generate-002"
 
 class VideoChatRequest(BaseModel):
     prompt: str
     video_base64: Optional[str] = None
     video_url: Optional[str] = None
     mime_type: Optional[str] = "video/mp4"
-    model: Optional[str] = "models/gemini-2.5-flash"
+    model: Optional[str] = "models/veo-3.0-generate-preview"
 
 
 def _fetch_and_base64(url: str) -> str:
@@ -135,7 +135,7 @@ async def chat_image(request: ImageChatRequest):
             }
         ]
         response = gemini_client.models.generate_content(
-            model=request.model or "models/gemini-2.5-flash",
+            model=request.model or "models/imagen-3.0-generate-002",
             contents=contents
         )
         content = getattr(response, 'text', str(response))
@@ -167,7 +167,7 @@ async def chat_video(request: VideoChatRequest):
             }
         ]
         response = gemini_client.models.generate_content(
-            model=request.model or "models/gemini-2.5-flash",
+            model=request.model or "models/veo-3.0-generate-preview",
             contents=contents
         )
         content = getattr(response, 'text', str(response))
