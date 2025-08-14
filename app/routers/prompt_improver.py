@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Body
 from app.config import settings
 from pydantic import BaseModel
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from app.models import AvailableModels
 
 router = APIRouter()
@@ -58,31 +58,49 @@ PROMPT_IMPROVER_SYSTEM_PROMPT = {
         "- For technical documentation: Use precise terminology and adhere to industry standards.\n"
         "- For digital art: Specify styles (e.g., 'surrealism with neon gradients'), color palettes, and resolution.\n"
         "- For video production: Define frame rates, aspect ratios, and storytelling beats.\n\n"
-        "Response Format:\n"
+        "Response Format (text target):\n"
         "Provide only the enhanced prompt in the following structure:\n"
         "- Title: A concise, descriptive title (e.g., 'Design a Minimalist Logo for a Sustainable Fashion Brand').\n"
         "- Instructions: Bullet points or numbered steps with clear, actionable directives.\n"
         "- Constraints: Bold or italicize limitations (e.g., 'Deadline: 48 hours').\n"
         "- Examples: Include a sample output or visual reference (if applicable).\n\n"
+        "Response Format (image target):\n"
+        "Provide only the improved IMAGE GENERATION prompt and concise attributes:\n"
+        "- Title: Short scene/title\n"
+        "- Image Prompt: 1–3 sentences describing subject, scene, composition; avoid vague metaphors\n"
+        "- Attributes: style/movement, medium, lighting, color palette, camera (lens/angle), aspect ratio\n"
+        "- Negative Prompts (optional): elements to avoid\n\n"
         "Important: Exclude all commentary, explanations, or formatting beyond the improved prompt itself. Return ONLY the improved prompt."
     )
 }
 
 class PromptRequest(BaseModel):
     prompt: str
+    target: Optional[str] = "text"  # "text" or "image"
 
 @router.post("/improve-prompt", tags=["Prompt Improvement"])
 async def improve_prompt(
-    prompt: str = Body(..., description="The prompt text to improve")
+    request: PromptRequest
 ) -> dict:
     try:
         from app.main import get_gemini_client  # Use shared client
         gemini_client = get_gemini_client()
-        
-        improvement_prompt = f"""Improve the following prompt according to the instructions.
+
+        target = (request.target or "text").strip().lower()
+        if target not in ("text", "image"):
+            target = "text"
+
+        target_section = (
+            "Target: IMAGE prompt. Optimize for image models (describe visuals, concrete nouns/adjectives, include style, lighting, camera, aspect ratio; avoid ambiguous abstractions).\n"
+            if target == "image"
+            else "Target: TEXT prompt. Optimize for clarity, structure, and implementable instructions.\n"
+        )
+
+        improvement_prompt = f"""{target_section}
+Improve the following prompt according to the instructions.
 
 USER PROMPT:
-{prompt}
+{request.prompt}
 
 Return ONLY the improved prompt, nothing else.
 """
