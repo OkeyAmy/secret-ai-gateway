@@ -36,7 +36,8 @@ async def improve_prompt(
     prompt: str = Body(..., description="The prompt text to improve")
 ) -> dict:
     try:
-        from app.main import gemini_client  # Use shared client
+        from app.main import get_gemini_client  # Use shared client
+        gemini_client = get_gemini_client()
         
         improvement_prompt = f"""You are a highly skilled prompt engineer with extensive experience in refining and optimizing prompts for clarity, effectiveness, and comprehensive coverage. Your task is to transform the following user prompt into a more detailed and actionable version while preserving its original intent.
 

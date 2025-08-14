@@ -14,8 +14,14 @@ load_dotenv()
 
 # Initialize Google Gemini client
 from google import genai
+from functools import lru_cache
 
-gemini_client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+@lru_cache(maxsize=1)
+def get_gemini_client() -> genai.Client:
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GOOGLE_API_KEY is not set")
+    return genai.Client(api_key=api_key)
 
 def create_app():
     # Minimal initialization to reduce startup time

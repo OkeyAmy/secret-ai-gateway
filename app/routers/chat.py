@@ -15,7 +15,8 @@ async def chat_with_model(
     model: AvailableModels = AvailableModels.GEMINI_FLASH
 ):
     try:
-        from app.main import gemini_client
+        from app.main import get_gemini_client
+        gemini_client = get_gemini_client()
         
         session_id = f"session_{uuid5(NAMESPACE_DNS, 'default_api_key')}"
         
