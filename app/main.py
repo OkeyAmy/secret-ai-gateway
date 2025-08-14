@@ -64,7 +64,6 @@ def create_app():
         from app.routers.health import router as health_router
         from app.routers.generate_text import router as generate_text_router
         from app.routers.generate_image import router as generate_image_router
-        from app.routers.generate_video import router as generate_video_router
         
         app.include_router(models_router, prefix="/api")
         app.include_router(chat_router, prefix="/api")
@@ -72,7 +71,6 @@ def create_app():
         app.include_router(health_router, prefix="/api")
         app.include_router(generate_text_router, prefix="/api")
         app.include_router(generate_image_router, prefix="/api")
-        app.include_router(generate_video_router, prefix="/api")
     except Exception as e:
         logger.error(f"Failed to import routers: {e}")
 
