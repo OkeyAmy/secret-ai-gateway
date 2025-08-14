@@ -119,27 +119,35 @@ async def chat_image(request: ImageChatRequest):
         from app.main import get_gemini_client
         gemini_client = get_gemini_client()
 
+        parts: List[Dict[str, Any]] = [{"text": request.prompt}]
         data_b64 = request.image_base64
         if not data_b64 and request.image_url:
             data_b64 = _fetch_and_base64(request.image_url)
-        if not data_b64:
-            raise HTTPException(status_code=400, detail="Provide image_base64 or image_url")
+        if data_b64:
+            parts.append({"inline_data": {"mime_type": request.mime_type or "image/png", "data": data_b64}})
 
         contents = [
             {
                 "role": "user",
-                "parts": [
-                    {"text": request.prompt},
-                    {"inline_data": {"mime_type": request.mime_type or "image/png", "data": data_b64}},
-                ],
+                "parts": parts,
             }
         ]
         response = gemini_client.models.generate_content(
             model=request.model or "models/imagen-3.0-generate-002",
-            contents=contents
+            contents=contents,
+            generation_config={"response_mime_type": request.mime_type or "image/png"}
         )
-        content = getattr(response, 'text', str(response))
-        return {"response": content}
+        # For image outputs, some models return inline_data; fall back to text
+        result = getattr(response, 'text', None)
+        if not result and hasattr(response, 'candidates'):
+            try:
+                parts = response.candidates[0].content.parts
+                for p in parts:
+                    if hasattr(p, 'inline_data') and getattr(p.inline_data, 'data', None):
+                        return {"mime_type": getattr(p.inline_data, 'mime_type', request.mime_type), "data": p.inline_data.data}
+            except Exception:
+                pass
+        return {"response": result or str(response)}
     except HTTPException:
         raise
     except Exception as e:
@@ -151,27 +159,27 @@ async def chat_video(request: VideoChatRequest):
         from app.main import get_gemini_client
         gemini_client = get_gemini_client()
 
+        parts: List[Dict[str, Any]] = [{"text": request.prompt}]
         data_b64 = request.video_base64
         if not data_b64 and request.video_url:
             data_b64 = _fetch_and_base64(request.video_url)
-        if not data_b64:
-            raise HTTPException(status_code=400, detail="Provide video_base64 or video_url")
+        if data_b64:
+            parts.append({"inline_data": {"mime_type": request.mime_type or "video/mp4", "data": data_b64}})
 
         contents = [
             {
                 "role": "user",
-                "parts": [
-                    {"text": request.prompt},
-                    {"inline_data": {"mime_type": request.mime_type or "video/mp4", "data": data_b64}},
-                ],
+                "parts": parts,
             }
         ]
         response = gemini_client.models.generate_content(
             model=request.model or "models/veo-3.0-generate-preview",
-            contents=contents
+            contents=contents,
+            generation_config={"response_mime_type": request.mime_type or "video/mp4"}
         )
-        content = getattr(response, 'text', str(response))
-        return {"response": content}
+        # Video models may return long-running operations or URIs; return raw payload if text is absent
+        result = getattr(response, 'text', None)
+        return {"response": result or str(response)}
     except HTTPException:
         raise
     except Exception as e:
