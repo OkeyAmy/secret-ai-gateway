@@ -1,6 +1,6 @@
 # API Reference
 
-Base URL: `http://localhost:8000`
+Base URL: `https://secret-ai-gateway.onrender.com`
 
 ## Health
 - GET `/api/health`
@@ -17,7 +17,7 @@ Base URL: `http://localhost:8000`
 - GET `/api/chat`
 - Query params:
   - `prompt` (string, required)
-  - `model` (enum, optional): `gemini-2.5-flash` (default), `gemini-2.5-pro`, `gemini-2.0-flash`, `gemini-2.0-pro-exp`
+  - `model` (enum, optional): `gemini-2.5-flash` (default), `gemini-2.5-pro`, `gemini-2.0-flash`
 - Response examples:
   - `{ "response": "Hello!" }`
   - `{ "Think Process": "...", "Response": "..." }`
@@ -26,7 +26,7 @@ Base URL: `http://localhost:8000`
 - POST `/api/generate/text`
 - JSON body:
   - `prompt` (string, required)
-  - `model` (string, optional; default `models/gemini-2.5-flash` allowed as short name `gemini-2.5-flash`)
+  - `model` (string, optional; default `gemini-2.5-flash` or full `models/gemini-2.5-flash`)
 - Response:
   - `{ "response": "..." }`
 
@@ -38,7 +38,7 @@ Base URL: `http://localhost:8000`
     - allowed: `gemini-2.0-flash-exp-image-generation`, `gemini-2.0-flash-preview-image-generation`
 - Behavior: streams, saves first image as a server file, returns URL
 - Response:
-  - `{ "response": "http://localhost:8000/api/files/<filename>" }`
+  - `{ "response": "https://secret-ai-gateway.onrender.com/api/files/<filename>" }`
 
 ## Files
 - GET `/api/files/{filename}`

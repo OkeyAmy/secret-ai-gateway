@@ -18,6 +18,48 @@ Read the full documentation in the `docs/` folder:
 - Architecture overview: `docs/04-architecture.md`
 - Deployment guide: `docs/05-deployment.md`
 
+## Hosted Base URL (Render)
+- Base: `https://secret-ai-gateway.onrender.com/`
+- Example: `GET https://secret-ai-gateway.onrender.com/api/health`
+
+### Quick integration examples
+
+JavaScript (fetch):
+```javascript
+const BASE = 'https://secret-ai-gateway.onrender.com';
+
+// Chat (text)
+const chat = async () => {
+  const q = new URLSearchParams({ prompt: 'Hello Gemini', model: 'gemini-2.5-flash' });
+  const res = await fetch(`${BASE}/api/chat?${q.toString()}`);
+  const data = await res.json();
+  console.log(data.response ?? data);
+};
+
+// Image generation (returns URL)
+const genImage = async () => {
+  const q = new URLSearchParams({ prompt: 'A sunset over mountains', model: 'gemini-2.0-flash-preview-image-generation' });
+  const res = await fetch(`${BASE}/api/generate/image?${q.toString()}`);
+  const data = await res.json();
+  // data.response is a URL like `${BASE}/api/files/<filename>`
+  console.log('Image URL:', data.response);
+};
+```
+
+Python (requests):
+```python
+import requests
+BASE = 'https://secret-ai-gateway.onrender.com'
+
+# Chat
+r = requests.get(f"{BASE}/api/chat", params={"prompt": "Hello Gemini", "model": "gemini-2.5-flash"})
+print(r.json())
+
+# Image
+r = requests.get(f"{BASE}/api/generate/image", params={"prompt": "A sunset", "model": "gemini-2.0-flash-preview-image-generation"})
+print(r.json())  # {"response": "<absolute-url>"}
+```
+
 ## Prerequisites
 
 - Python 3.12.0
