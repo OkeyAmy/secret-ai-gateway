@@ -18,9 +18,9 @@ from functools import lru_cache
 
 @lru_cache(maxsize=1)
 def get_gemini_client() -> genai.Client:
-    api_key = os.getenv("GOOGLE_API_KEY")
+    api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
     if not api_key:
-        raise RuntimeError("GOOGLE_API_KEY is not set")
+        raise RuntimeError("GOOGLE_API_KEY or GEMINI_API_KEY must be set")
     return genai.Client(api_key=api_key)
 
 def create_app():
@@ -62,11 +62,17 @@ def create_app():
         from app.routers.chat import router as chat_router
         from app.routers.prompt_improver import router as prompt_improver_router
         from app.routers.health import router as health_router
+        from app.routers.generate_text import router as generate_text_router
+        from app.routers.generate_image import router as generate_image_router
+        from app.routers.generate_video import router as generate_video_router
         
         app.include_router(models_router, prefix="/api")
         app.include_router(chat_router, prefix="/api")
         app.include_router(prompt_improver_router, prefix="/api")
         app.include_router(health_router, prefix="/api")
+        app.include_router(generate_text_router, prefix="/api")
+        app.include_router(generate_image_router, prefix="/api")
+        app.include_router(generate_video_router, prefix="/api")
     except Exception as e:
         logger.error(f"Failed to import routers: {e}")
 
