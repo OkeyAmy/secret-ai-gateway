@@ -60,22 +60,17 @@ def _generate_image_stream(prompt: str, model: str) -> Dict[str, Any]:
         except Exception:
             continue
 
-    if first_image_b64:
+    if first_image_b64 is not None:
         # Return base64 as response (chat-like response key)
         prefix = f"data:{first_image_mime};base64," if first_image_mime else ""
-        return {"response": prefix + first_image_b64}
+        if isinstance(first_image_b64, bytes):
+            b64 = base64.b64encode(first_image_b64).decode("utf-8")
+        else:
+            b64 = first_image_b64
+        return {"response": prefix + b64}
     if first_text:
         return {"response": first_text}
     return {"response": "No image generated."}
-
-@router.post("/generate/image", tags=["Generation"])
-async def generate_image(request: ImageGenerateRequest):
-    try:
-        return _generate_image_stream(prompt=request.prompt, model=request.model or "models/gemini-2.0-flash-preview-image-generation")
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error generating image: {str(e)}")
 
 @router.get("/generate/image", tags=["Generation"])
 async def generate_image_get(
