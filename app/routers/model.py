@@ -38,12 +38,37 @@ async def get_available_models():
                 "version": m.get("version"),
                 "inference_type": m.get("inferenceType") or m.get("inference_type"),
             }
-            model_names.add(name) if hasattr(model_names, 'add') else model_names.append(name)
+            model_names.append(name)
             model_details[name] = {k: v for k, v in item.items() if v is not None}
+
+        # Categorize models by modality using name/display_name heuristics
+        audio_keywords = ["audio", "tts", "native-audio", "live"]
+        image_keywords = ["imagen", "image-generation", "image_gen", "image ", " image", "image-"]
+        video_keywords = ["veo", "video", "vid-"]
+
+        categories: Dict[str, List[str]] = {"text": [], "audio": [], "image": [], "video": []}
+        for name in model_names:
+            details = model_details.get(name, {})
+            disp = (details.get("display_name") or "").lower()
+            lname = name.lower()
+
+            is_audio = any(k in lname or k in disp for k in audio_keywords)
+            is_image = any(k in lname or k in disp for k in image_keywords)
+            is_video = any(k in lname or k in disp for k in video_keywords)
+
+            if is_video:
+                categories["video"].append(name)
+            elif is_image:
+                categories["image"].append(name)
+            elif is_audio:
+                categories["audio"].append(name)
+            else:
+                categories["text"].append(name)
 
         return {
             "models": model_names,
-            "model_details": model_details
+            "model_details": model_details,
+            "categories": categories
         }
     except HTTPException:
         raise
