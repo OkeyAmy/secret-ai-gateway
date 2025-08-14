@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from app.config import settings
 from datetime import datetime
 from uuid import uuid5, NAMESPACE_DNS
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 from app.models import AvailableModels
 from pydantic import BaseModel
 import base64
@@ -23,17 +23,13 @@ async def chat_with_model(
         
         session_id = f"session_{uuid5(NAMESPACE_DNS, 'default_api_key')}"
         
-        system_prompt = """You are a thoughtful and helpful assistant when hlps user's whith their prompt/question. When answering user questions:
-1. Take time to think carefully about the question
-2. Consider multiple perspectives and approaches
-3. Provide accurate, relevant, and complete information
-4. Ensure your responses are clear and easy to understand
-5. If you're uncertain about something, acknowledge it transparently
-6. Use examples when it helps clarify your explanations
-7. Remember previous parts of the conversation to maintain context
-8. Ask clarifying questions if the user's request is ambiguous
-9. You only respond to user with an appropiate response
-Your goal is to provide the most helpful and satisfying response possible, ensuring the user's needs are fully addressed."""
+        system_prompt = (
+            "You are a precise, helpful assistant."
+            " Always answer clearly, factually, and concisely."
+            " If the prompt is ambiguous, ask one brief clarifying question."
+            " When relevant, provide short examples or steps."
+            " Avoid speculation and include only information you can justify."
+        )
 
         messages = chat_sessions.get(session_id, [("system", system_prompt)])
         if len(messages) == 0:
