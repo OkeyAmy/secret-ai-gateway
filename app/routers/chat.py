@@ -2,8 +2,11 @@ from fastapi import APIRouter, HTTPException
 from app.config import settings
 from datetime import datetime
 from uuid import uuid5, NAMESPACE_DNS
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from app.models import AvailableModels
+from pydantic import BaseModel
+import base64
+import requests
 
 router = APIRouter()
 
@@ -68,3 +71,108 @@ Your goal is to provide the most helpful and satisfying response possible, ensur
             status_code=500,
             detail=f"Error chatting with model: {str(e)}"
         )
+
+# New request schemas for multimodal chats
+class TextChatRequest(BaseModel):
+    prompt: str
+    model: Optional[str] = "models/gemini-2.5-flash"
+
+class ImageChatRequest(BaseModel):
+    prompt: str
+    image_base64: Optional[str] = None
+    image_url: Optional[str] = None
+    mime_type: Optional[str] = "image/png"
+    model: Optional[str] = "models/gemini-2.5-flash"
+
+class VideoChatRequest(BaseModel):
+    prompt: str
+    video_base64: Optional[str] = None
+    video_url: Optional[str] = None
+    mime_type: Optional[str] = "video/mp4"
+    model: Optional[str] = "models/gemini-2.5-flash"
+
+
+def _fetch_and_base64(url: str) -> str:
+    resp = requests.get(url, timeout=20)
+    resp.raise_for_status()
+    return base64.b64encode(resp.content).decode("utf-8")
+
+@router.post("/chat/text", tags=['Generation'])
+async def chat_text(request: TextChatRequest):
+    try:
+        from app.main import get_gemini_client
+        gemini_client = get_gemini_client()
+
+        contents = f"User: {request.prompt}"
+        response = gemini_client.models.generate_content(
+            model=request.model or "models/gemini-2.5-flash",
+            contents=contents
+        )
+        content = getattr(response, 'text', str(response))
+        return {"response": content}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error chatting with text model: {str(e)}")
+
+@router.post("/chat/image", tags=['Generation'])
+async def chat_image(request: ImageChatRequest):
+    try:
+        from app.main import get_gemini_client
+        gemini_client = get_gemini_client()
+
+        data_b64 = request.image_base64
+        if not data_b64 and request.image_url:
+            data_b64 = _fetch_and_base64(request.image_url)
+        if not data_b64:
+            raise HTTPException(status_code=400, detail="Provide image_base64 or image_url")
+
+        contents = [
+            {
+                "role": "user",
+                "parts": [
+                    {"text": request.prompt},
+                    {"inline_data": {"mime_type": request.mime_type or "image/png", "data": data_b64}},
+                ],
+            }
+        ]
+        response = gemini_client.models.generate_content(
+            model=request.model or "models/gemini-2.5-flash",
+            contents=contents
+        )
+        content = getattr(response, 'text', str(response))
+        return {"response": content}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error chatting with image model: {str(e)}")
+
+@router.post("/chat/video", tags=['Generation'])
+async def chat_video(request: VideoChatRequest):
+    try:
+        from app.main import get_gemini_client
+        gemini_client = get_gemini_client()
+
+        data_b64 = request.video_base64
+        if not data_b64 and request.video_url:
+            data_b64 = _fetch_and_base64(request.video_url)
+        if not data_b64:
+            raise HTTPException(status_code=400, detail="Provide video_base64 or video_url")
+
+        contents = [
+            {
+                "role": "user",
+                "parts": [
+                    {"text": request.prompt},
+                    {"inline_data": {"mime_type": request.mime_type or "video/mp4", "data": data_b64}},
+                ],
+            }
+        ]
+        response = gemini_client.models.generate_content(
+            model=request.model or "models/gemini-2.5-flash",
+            contents=contents
+        )
+        content = getattr(response, 'text', str(response))
+        return {"response": content}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error chatting with video model: {str(e)}")
