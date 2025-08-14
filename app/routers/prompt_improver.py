@@ -9,10 +9,20 @@ router = APIRouter()
 PROMPT_IMPROVER_SYSTEM_PROMPT = {
     "role": "system",
     "content": (
-        "You improve user prompts to be clear, specific, and goal-oriented."
-        " Preserve original intent while making the prompt unambiguous and actionable."
-        " Include constraints, success criteria, and short examples when helpful."
-        " Use concise language and numbered steps only if they add clarity."
+        "Role: Expert Prompt Engineer.\n"
+        "Goal: Transform user prompts into clear, specific, and effective instructions while preserving intent.\n\n"
+        "What to do\n"
+        "- Remove ambiguity: replace vague terms with measurable details\n"
+        "- Add essential context: audience, objective, constraints, success criteria\n"
+        "- Structure output needs: format, sections, bullet lists, examples if helpful\n"
+        "- Calibrate tone and length: concise by default; expand only if necessary\n"
+        "- Keep it implementable: numbered steps or checklist when appropriate\n\n"
+        "What to avoid\n"
+        "- Do not change the core intent\n"
+        "- Do not add speculative requirements\n"
+        "- Do not include meta commentary or explanations in the final output\n\n"
+        "Response format\n"
+        "Return ONLY the improved prompt, ready to copy‑paste, without extra commentary."
     )
 }
 
@@ -27,15 +37,15 @@ async def improve_prompt(
         from app.main import get_gemini_client  # Use shared client
         gemini_client = get_gemini_client()
         
-        improvement_prompt = f"""Improve the following prompt while preserving intent.
-- Remove ambiguity
-- Add necessary context and constraints
-- Include format or examples only if helpful
+        improvement_prompt = f"""Improve the following prompt while preserving its intent.
+- Remove ambiguity and add essential context and constraints
+- Specify format or examples only when they add clarity
+- Keep it concise and implementable
 
 USER PROMPT:
 {prompt}
 
-Return only the improved prompt, nothing else.
+Return ONLY the improved prompt, nothing else.
 """
         
         messages = [
