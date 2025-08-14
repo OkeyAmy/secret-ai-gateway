@@ -1,24 +1,27 @@
-# Secret Network AI Hub API
+# Gemini AI Gateway API
 
-![Secret Network](https://th.bing.com/th/id/OIP.Q3YYqq7bTMLB5c__FisPagHaB2?rs=1&pid=ImgDetMain)
+![Gemini](https://developers.google.com/static/ai/images/gemini-icon.png)
 
 ## Overview
 
-The Secret Network AI Hub API is a powerful gateway to leverage Secret Network's advanced AI models in your applications. This API provides secure and private access to state-of-the-art language models including DeepSeek R1 (70B) and Llama 3.2 Vision, all running on the privacy-focused Secret Network blockchain infrastructure.
+This API provides a clean gateway to Google Gemini models for text chat and image generation. It exposes simple REST endpoints so developers can integrate quickly, while remaining understandable to non-developers.
 
-## Key Features
+- **Text Chat**: `/api/chat`, `/api/generate/text`
+- **Image Generation**: `/api/generate/image`
+- **Models Listing**: `/api/models` (includes categories for text, image)
+- **Health & Files**: `/api/health`, `/api/files/{filename}`
 
-- **🤖 Advanced AI Models**: Access to DeepSeek R1 (70B) and Llama 3.2 Vision models
-- **🔒 Privacy-Focused**: Built on Secret Network's privacy-preserving blockchain infrastructure
-- **💬 Conversational AI**: Maintain chat sessions with context awareness
-- **✨ Prompt Engineering**: Tools to improve and optimize AI prompts
-- **🔄 RESTful API**: Simple integration with any application using standard REST endpoints
-- **📚 Comprehensive Documentation**: Detailed API documentation via Swagger UI and ReDoc
+Read the full documentation in the `docs/` folder:
+- Getting started: `docs/01-quickstart.md`
+- API usage: `docs/02-api-reference.md`
+- Model selection: `docs/03-models-and-categories.md`
+- Architecture overview: `docs/04-architecture.md`
+- Deployment guide: `docs/05-deployment.md`
 
 ## Prerequisites
 
 - Python 3.12.0
-- Secret AI API Key
+- A Google Gemini API key (set `GEMINI_API_KEY` or `GOOGLE_API_KEY`)
 
 ## Installation
 
@@ -178,127 +181,3 @@ BASE_URL = "http://localhost:8000"
 response = requests.get(f"{BASE_URL}/api/models")
 print(response.json())
 ```
-
-## Deployment on Render
-
-This project is set up for seamless deployment on Render with the API key pre-configured.
-
-### Automatic Deployment
-
-The easiest way to deploy is to use the included `render.yaml` file:
-
-1. Create a new Render account or sign in at [dashboard.render.com](https://dashboard.render.com)
-2. Click on the "New +" button and select "Blueprint"
-3. Connect your GitHub/GitLab account and select your repository
-4. Render will automatically detect the `render.yaml` file and set up your service
-5. The environment variables, including the Secret AI API key, are already configured in the `render.yaml` file
-
-### Manual Deployment
-
-If you prefer to set up manually:
-
-1. Create a new Web Service on Render
-2. Connect to your repository
-3. Use the following settings:
-   - Environment: `Python 3`
-   - Build Command: `pip install -r requirements.txt`
-   - Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-4. Add the environment variable:
-   - Key: `SECRET_AI_API_KEY`
-   - Value: `bWFzdGVyQHNjcnRsYWJzLmNvbTpTZWNyZXROZXR3b3JrTWFzdGVyS2V5X18yMDI1`
-
-The API will be available at your Render URL once deployment is complete.
-
-## Special Note for Frontend Engineers
-
-This API has been configured for easy integration with frontend applications:
-
-### Open Access API
-
-For maximum convenience, this API is configured to accept requests from any origin without requiring authentication:
-
-1. **No API Keys Required** - Frontend applications can make API calls without including any API keys or tokens.
-
-2. **Simple Integration** - Just make standard fetch/axios calls from your frontend application:
-
-```javascript
-async function callSecretAI(prompt) {
-  const response = await fetch('https://your-render-url.onrender.com/api/chat?prompt=' + encodeURIComponent(prompt));
-  return await response.json();
-}
-```
-
-## Security Note
-
-The API is now configured with an internal API key, eliminating the need for external authentication:
-
-- No API key authentication required
-- Simplified integration for frontend and backend applications
-- API key managed internally within the application
-
-```javascript
-async function callSecretAI(prompt) {
-  const response = await fetch('https://your-render-url.onrender.com/api/chat?prompt=' + encodeURIComponent(prompt));
-  return await response.json();
-}
-```
-
-### Deployment Considerations
-
-When deploying, ensure the internal API key is securely managed within your application environment.
-
-## Configuration
-
-| Variable           | Description                                 | Default                        |
-|--------------------|---------------------------------------------|--------------------------------|
-| CORS_ORIGINS       | Allowed origins for CORS                    | ["*"] (All origins)           |
-| ENVIRONMENT        | Current environment (production/dev)        | production                     |
-
-## Project Structure
-
-```
-secret-network-ai-api/
-├── app/
-│   ├── __init__.py
-│   ├── config.py         # Application configuration
-│   ├── main.py           # Application entry point
-│   ├── models.py         # Pydantic models
-│   ├── security.py       # API security mechanisms
-│   └── routers/          # API route handlers
-│       ├── __init__.py
-│       ├── chat.py       # Chat endpoint
-│       ├── health.py     # Health check endpoint 
-│       ├── model.py      # Model information endpoints
-│       └── prompt_improver.py # Prompt improvement endpoint
-├── requirements.txt      # Project dependencies
-└── README.md            # Project documentation
-```
-
-## Dependencies
-
-The key dependencies include:
-
-- **FastAPI**: Modern, fast web framework for building APIs
-- **Pydantic**: Data validation and settings management
-- **Secret AI SDK**: Official SDK for interacting with Secret Network AI models
-- **Uvicorn**: ASGI server implementation for running the API
-
-For a complete list, refer to the `requirements.txt` file.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For support and further information about Secret Network's AI capabilities, visit [Secret Network](https://docs.scrt.network/secret-network-documentation/secret-ai/introduction).
-
-## Special Thanks
-
-This project was created with love from Windsurf and Secret AI for their project. 
-
-> **Note about API Keys:** The API key is open and publicly available. You can find it in the [Secret AI documentation](https://docs.scrt.network/secret-network-documentation/secret-ai/sdk/setting-up-your-environment).
-
----
-
- 2025 Secret Network AI Hub | Built with ❤️ by the Secret Network Community
