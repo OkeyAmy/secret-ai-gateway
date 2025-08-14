@@ -33,7 +33,8 @@ curl -s "https://secret-ai-gateway.onrender.com/api/chat?prompt=Hello%20Gemini&m
   - `{ "response": "Hello!" }`
   - `{ "Think Process": "...", "Response": "..." }`
 
-## Generate Text
+## Generate Text (Deprecated)
+- DEPRECATED: Use `GET /api/chat` instead for text generation.
 - POST `/api/generate/text`
 - JSON body:
   - `prompt` (string, required)

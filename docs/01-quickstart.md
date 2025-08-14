@@ -30,6 +30,14 @@ curl -s "https://secret-ai-gateway.onrender.com/api/models"
 curl -s "https://secret-ai-gateway.onrender.com/api/chat?prompt=Hello%20Gemini&model=gemini-2.5-flash"
 ```
 
+## Generate text (Deprecated)
+Use `/api/chat` instead for text generation.
+```bash
+curl -s -X POST "https://secret-ai-gateway.onrender.com/api/generate/text" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"Write a short poem","model":"gemini-2.5-flash"}'
+```
+
 ## Generate image (GET)
 Returns a URL to the generated image file.
 ```bash
