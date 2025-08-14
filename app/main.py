@@ -21,7 +21,7 @@ def get_gemini_client() -> genai.Client:
     api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise RuntimeError("GOOGLE_API_KEY or GEMINI_API_KEY must be set")
-    return genai.Client(api_key=api_key)
+    return genai.Client(api_key=api_key, http_options={"api_version": "v1beta"})
 
 def create_app():
     # Minimal initialization to reduce startup time
