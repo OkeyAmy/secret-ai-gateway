@@ -10,6 +10,7 @@ class AvailableModels(str, Enum):
 class ImageModels(str, Enum):
     GEMINI_20_FLASH_EXP_IMAGE_GENERATION = "gemini-2.0-flash-exp-image-generation"
     GEMINI_20_FLASH_PREVIEW_IMAGE_GENERATION = "gemini-2.0-flash-preview-image-generation"
+    GEMINI_25_FLASH_IMAGE_PREVIEW = "gemini-2.5-flash-image-preview" 
 
 class PromptTargets(str, Enum):
     TEXT = "text"
