@@ -13,7 +13,7 @@ router = APIRouter()
 ALLOWED_IMAGE_MODELS = {
     ImageModels.GEMINI_20_FLASH_EXP_IMAGE_GENERATION.value,
     ImageModels.GEMINI_20_FLASH_PREVIEW_IMAGE_GENERATION.value,
-    ImageModels.GEMINI_25_FLASH_IMAGE_PREVIEW.value, 
+    # ImageModels.GEMINI_25_FLASH_IMAGE_PREVIEW.value, 
 }
 
 class ImageGenerateRequest(BaseModel):
